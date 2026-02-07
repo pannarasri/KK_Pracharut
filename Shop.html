@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>โปรแกรมสรุปยอดขาย (V.5 ประหยัดกระดาษ)</title>
+    <style>
+        body { font-family: 'Sarabun', sans-serif; background-color: #f0f2f5; padding: 15px; max-width: 650px; margin: auto; color: #333; }
+        .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 10px; border: 1px solid #ddd; }
+        h3 { color: #1a73e8; margin: 0 0 10px 0; border-bottom: 1px solid #eee; padding-bottom: 5px; font-size: 1.1em; }
+        .row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        input[type="number"], input[type="text"], input[type="date"], select { 
+            padding: 8px; border: 1px solid #ccc; border-radius: 6px; width: 45%; font-size: 16px; 
+        }
+        .res-val { width: 20%; text-align: right; font-weight: bold; color: #555; }
+        .total-box { background-color: #e8f0fe; padding: 8px; text-align: right; font-weight: bold; color: #1967d2; border-radius: 6px; margin-top: 5px; }
+        
+        /* สไตล์หน้าจอสรุปสุดท้าย */
+        .summary-section { background-color: #fffde7; border: 2px solid #fdd835; }
+        .calc-detail { font-size: 0.9em; line-height: 1.6; margin-top: 10px; padding: 10px; background: #fff; border-radius: 5px; }
+        .final-box { background-color: #e8f5e9; color: #2e7d32; padding: 10px; border-radius: 6px; text-align: center; font-size: 1.4em; font-weight: bold; margin-top: 10px; border: 1px solid #a5d6a7; }
+        
+        .btn-group { display: flex; gap: 10px; margin-top: 20px; }
+        button { flex: 1; padding: 15px; font-size: 16px; border-radius: 8px; cursor: pointer; border: none; font-weight: bold; color: white; }
+        .btn-full { background-color: #6c757d; }
+        .btn-short { background-color: #28a745; }
+
+        /* การตั้งค่าสำหรับการปริ้นต์ */
+        @media print {
+            .no-print, .btn-group, #expenseSection { display: none !important; }
+            body { background: white; padding: 0; }
+            .card { border: 1px solid #000; box-shadow: none; margin-bottom: 5px; padding: 10px; }
+            .summary-section { background: white !important; border: 1px solid #000; }
+            .final-box { background: #eee !important; color: black !important; }
+            h3 { color: black; border-bottom: 1px solid #000; }
+        }
+
+        /* คลาสพิเศษสำหรับซ่อนตอนปริ้นต์แบบย่อ */
+        .print-short #expenseSection, 
+        .print-short .no-print-short { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <h2 style="text-align: center; margin-bottom: 10px;">📝 สรุปยอดขายประจำวัน</h2>
+    
+    <div class="card">
+        <div class="row"><label>วันที่:</label><input type="date" id="dateInput"></div>
+    </div>
+
+    <div class="card" id="coinSection">
+        <h3>💰 1. รายละเอียดเหรียญ</h3>
+        <div class="row"><label>เหรียญ 10 x</label><input type="number" id="c10" oninput="calc()"><span class="res-val" id="r_c10">0</span></div>
+        <div class="row"><label>เหรียญ 5 x</label><input type="number" id="c5" oninput="calc()"><span class="res-val" id="r_c5">0</span></div>
+        <div class="row"><label>เหรียญ 2 x</label><input type="number" id="c2" oninput="calc()"><span class="res-val" id="r_c2">0</span></div>
+        <div class="row"><label>เหรียญ 1 x</label><input type="number" id="c1" oninput="calc()"><span class="res-val" id="r_c1">0</span></div>
+        <div class="row"><label>เหรียญมัด x</label><input type="number" id="cPack" oninput="calc()"><span class="res-val" id="r_cPack">0</span></div>
+        <div class="total-box">รวมเหรียญ (A): <span id="totalCoins">0</span></div>
+    </div>
+
+    <div class="card" id="bankSection">
+        <h3>💵 2. รายละเอียดแบงค์</h3>
+        <div class="row"><label>แบงค์ 1000 x</label><input type="number" id="b1000" oninput="calc()"><span class="res-val" id="r_b1000">0</span></div>
+        <div class="row"><label>แบงค์ 500 x</label><input type="number" id="b500" oninput="calc()"><span class="res-val" id="r_b500">0</span></div>
+        <div class="row"><label>แบงค์ 100 x</label><input type="number" id="b100" oninput="calc()"><span class="res-val" id="r_b100">0</span></div>
+        <div class="row"><label>แบงค์ 50 x</label><input type="number" id="b50" oninput="calc()"><span class="res-val" id="r_b50">0</span></div>
+        <div class="row"><label>แบงค์ 20 x</label><input type="number" id="b20" oninput="calc()"><span class="res-val" id="r_b20">0</span></div>
+        <div class="total-box">รวมแบงค์: <span id="totalBanks">0</span></div>
+    </div>
+
+    <div class="card" id="expenseSection">
+        <h3>💸 3. รายการค่าใช้จ่าย (เลือกจำนวน)</h3>
+        <div class="row no-print">
+            <select id="expCount" onchange="generateFields()" style="width: 100%;">
+                <option value="0">ไม่มีค่าใช้จ่าย</option>
+                <script>for(let i=1; i<=15; i++) document.write(`<option value="${i}">${i} รายการ</option>`);</script>
+            </select>
+        </div>
+        <div id="expenseFields"></div>
+        <div class="total-box" style="color:red;">รวมจ่าย: <span id="totalExpenses">0</span></div>
+        <div class="row" style="margin-top:10px;"><label>📲 เงินโอน:</label><input type="number" id="transfer" oninput="calc()"></div>
+    </div>
+
+    <div class="card summary-section">
+        <h3>📊 4. สรุปยอดสุทธิ</h3>
+        <div class="row no-print-short"><label>ยอดขายเงินสด:</label><input type="number" id="cashSales" oninput="calc()"></div>
+        <div class="row no-print-short"><label>เหรียญเมื่อวาน:</label><input type="number" id="yesterdayCoins" oninput="calc()"></div>
+        
+        <div class="calc-detail" id="calcDetail">
+            </div>
+
+        <div class="final-box">
+            ยอดสุทธิ: <span id="finalResult">0</span>
+        </div>
+    </div>
+
+    <div class="btn-group no-print">
+        <button class="btn-full" onclick="window.print()">🖨️ ปริ้นต์ทั้งหมด</button>
+        <button class="btn-short" onclick="printShort()">📄 ปริ้นต์เฉพาะใบสรุปย่อ</button>
+    </div>
+
+    <script>
+        function generateFields() {
+            const count = document.getElementById('expCount').value;
+            const container = document.getElementById('expenseFields');
+            container.innerHTML = '';
+            for (let i = 1; i <= count; i++) {
+                container.innerHTML += `<div class="row"><input type="text" class="exp-name" style="width:55%" placeholder="รายการที่ ${i}"><input type="number" class="exp-amt" style="width:40%" oninput="calc()"></div>`;
+            }
+            calc();
+        }
+
+        function printShort() {
+            document.body.classList.add('print-short');
+            window.print();
+            document.body.classList.remove('print-short');
+        }
+
+        function calc() {
+            let coins = (id)=> (document.getElementById(id).value || 0);
+            let v_c10 = coins('c10')*10, v_c5 = coins('c5')*5, v_c2 = coins('c2')*2, v_c1 = coins('c1')*1, v_cp = coins('cPack')*10;
+            let totalCoins = v_c10+v_c5+v_c2+v_c1+v_cp;
+            
+            document.getElementById('r_c10').innerText = v_c10;
+            document.getElementById('r_c5').innerText = v_c5;
+            document.getElementById('r_c2').innerText = v_c2;
+            document.getElementById('r_c1').innerText = v_c1;
+            document.getElementById('r_cPack').innerText = v_cp;
+            document.getElementById('totalCoins').innerText = totalCoins.toLocaleString();
+
+            let v_b1000 = coins('b1000')*1000, v_b500 = coins('b500')*500, v_b100 = coins('b100')*100, v_b50 = coins('b50')*50, v_b20 = coins('b20')*20;
+            document.getElementById('totalBanks').innerText = (v_b1000+v_b500+v_b100+v_b50+v_b20).toLocaleString();
+            document.getElementById('r_b1000').innerText = v_b1000;
+            document.getElementById('r_b500').innerText = v_b500;
+            document.getElementById('r_b100').innerText = v_b100;
+            document.getElementById('r_b50').innerText = v_b50;
+            document.getElementById('r_b20').innerText = v_b20;
+
+            let totalExp = 0;
+            document.querySelectorAll('.exp-amt').forEach(a => totalExp += parseFloat(a.value || 0));
+            document.getElementById('totalExpenses').innerText = totalExp.toLocaleString();
+
+            let cash = parseFloat(document.getElementById('cashSales').value || 0);
+            let trans = parseFloat(document.getElementById('transfer').value || 0);
+            let yest = parseFloat(document.getElementById('yesterdayCoins').value || 0);
+
+            let step1 = cash - totalExp - trans;
+            let final = step1 + yest - totalCoins;
+
+            let detail = `ยอดเงินสด: ${cash.toLocaleString()} | หักจ่ายรวม: -${totalExp.toLocaleString()} | หักโอน: -${trans.toLocaleString()}<br>`;
+            detail += `คงเหลือเงินสด: <b>${step1.toLocaleString()}</b> | +เหรียญเก่า: ${yest.toLocaleString()} | -เหรียญใหม่: ${totalCoins.toLocaleString()}`;
+            
+            document.getElementById('calcDetail').innerHTML = detail;
+            document.getElementById('finalResult').innerText = final.toLocaleString();
+        }
+        document.getElementById('dateInput').valueAsDate = new Date();
+    </script>
+</body>
+</html>
