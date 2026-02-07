@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>โปรแกรมสรุปยอดขาย (V.8 ระบบพิมพ์แยกหน้า)</title>
+    <title>โปรแกรมสรุปยอดขาย (V.9 แสดงตัวคูณในใบย่อ)</title>
     <style>
         body { font-family: 'Sarabun', sans-serif; background-color: #f0f2f5; padding: 15px; max-width: 650px; margin: auto; color: #333; }
         .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 10px; border: 1px solid #ddd; }
@@ -22,7 +22,6 @@
         .btn-full { background-color: #6c757d; }
         .btn-short { background-color: #28a745; }
 
-        /* การพิมพ์ปกติ (Full) */
         @media print {
             .no-print, .btn-group { display: none !important; }
             body { background: white; padding: 0; width: 100%; }
@@ -30,23 +29,21 @@
         }
     </style>
 </head>
-<body id="mainBody">
+<body>
 
     <h2 style="text-align: center; margin-bottom: 10px;">📝 สรุปยอดขายประจำวัน</h2>
     
-    <div class="card" id="dateCard">
-        <div class="row"><label>วันที่:</label><input type="date" id="dateInput"></div>
-    </div>
+    <div class="card"><div class="row"><label>วันที่:</label><input type="date" id="dateInput"></div></div>
 
-    <div id="printArea">
+    <div id="mainForm">
         <div class="card" id="coinSection">
-            <h3>💰 1. รายละเอียดเหรียญ (วันนี้)</h3>
+            <h3>💰 1. รายละเอียดเหรียญ</h3>
             <div class="row"><label>เหรียญ 10 x</label><input type="number" id="c10" oninput="calc()"><span class="res-val" id="r_c10">0</span></div>
             <div class="row"><label>เหรียญ 5 x</label><input type="number" id="c5" oninput="calc()"><span class="res-val" id="r_c5">0</span></div>
             <div class="row"><label>เหรียญ 2 x</label><input type="number" id="c2" oninput="calc()"><span class="res-val" id="r_c2">0</span></div>
             <div class="row"><label>เหรียญ 1 x</label><input type="number" id="c1" oninput="calc()"><span class="res-val" id="r_c1">0</span></div>
             <div class="row"><label>เหรียญมัด x</label><input type="number" id="cPack" oninput="calc()"><span class="res-val" id="r_cPack">0</span></div>
-            <div class="total-box">รวมเหรียญวันนี้ (A): <span id="totalCoins">0</span> บาท</div>
+            <div class="total-box">รวมเหรียญ (A): <span id="totalCoins">0</span> บาท</div>
         </div>
 
         <div class="card" id="bankSection">
@@ -61,12 +58,9 @@
 
         <div class="card" id="expenseSection">
             <h3>💸 3. รายการค่าใช้จ่าย</h3>
-            <div class="row no-print">
-                <label>จำนวนรายการ:</label>
-                <select id="expCount" onchange="generateFields()">
-                    <option value="0">ไม่มีรายการจ่าย</option>
-                    <script>for(let i=1; i<=15; i++) document.write(`<option value="${i}">${i} รายการ</option>`);</script>
-                </select>
+            <div class="row no-print"><label>จำนวนรายการ:</label>
+                <select id="expCount" onchange="generateFields()"><option value="0">ไม่มีรายการจ่าย</option>
+                <script>for(let i=1; i<=15; i++) document.write(`<option value="${i}">${i} รายการ</option>`);</script></select>
             </div>
             <div id="expenseFields"></div>
             <div class="total-box" style="color:#d32f2f;">รวมยอดจ่ายทั้งหมด: <span id="totalExpenses">0</span></div>
@@ -78,67 +72,66 @@
             <h3>📊 4. สรุปยอดสุทธิ</h3>
             <div class="row no-print"><label>ยอดขายเงินสด:</label><input type="number" id="cashSales" oninput="calc()"></div>
             <div class="row no-print"><label>เหรียญเมื่อวาน:</label><input type="number" id="yesterdayCoins" oninput="calc()"></div>
-            
-            <div class="calc-detail" id="calcDetail">กรอกข้อมูลเพื่อดูการแจกแจงการลบ...</div>
-
+            <div class="calc-detail" id="calcDetail">กรอกข้อมูลเพื่อดูการแจกแจง...</div>
             <div class="final-box">ยอดสุทธิวันนี้: <span id="finalResult">0</span></div>
         </div>
     </div>
 
     <div class="btn-group no-print">
         <button class="btn-full" onclick="window.print()">🖨️ พิมพ์ทั้งหมด (1-4)</button>
-        <button class="btn-short" onclick="printShortOnly()">📄 พิมพ์ใบย่อ (1,2,4)</button>
+        <button class="btn-short" onclick="printShort()">📄 พิมพ์ใบย่อ (1,2,4)</button>
     </div>
 
     <script>
         function generateFields() {
             const count = document.getElementById('expCount').value;
-            const container = document.getElementById('expenseFields');
-            container.innerHTML = '';
+            const container = document.getElementById('expenseFields'); container.innerHTML = '';
             for (let i = 1; i <= count; i++) {
                 container.innerHTML += `<div class="row"><input type="text" class="exp-name" style="width:55%" placeholder="รายการที่ ${i}"><input type="number" class="exp-amt" style="width:40%" oninput="calc()"></div>`;
-            }
-            calc();
+            } calc();
         }
 
-        // ระบบพิมพ์ใบย่อแบบแยกหน้าต่าง (แก้ปัญหาซ่อนไม่ทัน)
-        function printShortOnly() {
+        function printShort() {
             const dateVal = document.getElementById('dateInput').value;
-            const coinHTML = document.getElementById('coinSection').outerHTML;
-            const bankHTML = document.getElementById('bankSection').outerHTML;
-            const summaryHTML = document.getElementById('summarySection').outerHTML;
             const style = document.head.innerHTML;
+            
+            // ฟังก์ชันดึงค่าไปโชว์ในใบย่อแบบมีตัวคูณ
+            const getShortRows = (ids, multiplier) => {
+                let html = '';
+                ids.forEach(id => {
+                    let qty = document.getElementById(id).value || 0;
+                    let total = qty * multiplier[id];
+                    if(qty > 0) html += `<div style="display:flex;justify-content:space-between;margin-bottom:5px;"><span>${document.querySelector('label[for="'+id+'"]')?.innerText || id} x ${qty}</span><span>${total.toLocaleString()}</span></div>`;
+                });
+                return html;
+            };
 
-            const printWindow = window.open('', '_blank');
-            printWindow.document.write(`
-                <html>
-                <head>
-                    ${style}
-                    <style>
-                        .no-print, input, select { display: none !important; }
-                        .card { border: 1px solid #000 !important; box-shadow: none !important; margin-bottom: 10px; }
-                        h3 { color: black !important; border-bottom: 1px solid #000 !important; }
-                        .calc-detail { border: 1px solid #000 !important; }
-                    </style>
-                </head>
-                <body>
-                    <h2 style="text-align: center;">📝 สรุปยอดขายประจำวัน (ใบย่อ)</h2>
-                    <p style="text-align: center;">วันที่: ${dateVal}</p>
-                    ${coinHTML}
-                    ${bankHTML}
-                    ${summaryHTML}
-                    <script>
-                        setTimeout(function() { window.print(); window.close(); }, 500);
-                    <\/script>
-                </body>
-                </html>
-            `);
-            printWindow.document.close();
+            // สร้างเนื้อหาใบย่อใหม่
+            let coinLines = "", bankLines = "";
+            let cIDs = ['c10','c5','c2','c1','cPack'], cM = {c10:10,c5:5,c2:2,c1:1,cPack:10};
+            let bIDs = ['b1000','b500','b100','b50','b20'], bM = {b1000:1000,b500:500,b100:100,b50:50,b20:20};
+            
+            const createShortSection = (title, ids, mults, totalID) => {
+                let rows = "";
+                ids.forEach(id => {
+                    let q = document.getElementById(id).value || 0;
+                    if(q > 0) rows += `<div class="row"><span>${id.replace('c','เหรียญ ').replace('b','แบงค์ ').replace('Pack','มัด')} x ${q}</span><span>${(q*mults[id]).toLocaleString()}</span></div>`;
+                });
+                return `<div class="card"><h3>${title}</h3>${rows}<div class="total-box">รวม: ${document.getElementById(totalID).innerText}</div></div>`;
+            };
+
+            const printWin = window.open('', '_blank');
+            printWin.document.write(`<html><head>${style}<style>.card{border:1px solid #000;box-shadow:none;margin-bottom:10px;}.row{display:flex;justify-content:space-between;}</style></head><body>`);
+            printWin.document.write(`<h2 style="text-align:center;">📝 สรุปยอดขาย (ใบย่อ)</h2><p style="text-align:center;">วันที่: ${dateVal}</p>`);
+            printWin.document.write(createShortSection("💰 1. รายละเอียดเหรียญ", cIDs, cM, "totalCoins"));
+            printWin.document.write(createShortSection("💵 2. รายละเอียดแบงค์", bIDs, bM, "totalBanks"));
+            printWin.document.write(`<div class="card summary-section"><h3>📊 4. สรุปยอดสุทธิ</h3>${document.getElementById('calcDetail').innerHTML}<div class="final-box">${document.getElementById('finalResult').parentElement.innerHTML}</div></div>`);
+            printWin.document.write(`<script>setTimeout(() => { window.print(); window.close(); }, 500);<\/script></body></html>`);
+            printWin.document.close();
         }
 
         function calc() {
             let getVal = (id) => parseFloat(document.getElementById(id).value || 0);
-            
             let v10=getVal('c10')*10, v5=getVal('c5')*5, v2=getVal('c2')*2, v1=getVal('c1')*1, vp=getVal('cPack')*10;
             let totalCoins = v10+v5+v2+v1+vp;
             document.getElementById('r_c10').innerText = v10.toLocaleString();
@@ -149,35 +142,28 @@
             document.getElementById('totalCoins').innerText = totalCoins.toLocaleString();
 
             let b1000=getVal('b1000')*1000, b500=getVal('b500')*500, b100=getVal('b100')*100, b50=getVal('b50')*50, b20=getVal('b20')*20;
+            let totalBanks = b1000+b500+b100+b50+b20;
             document.getElementById('r_b1000').innerText = b1000.toLocaleString();
             document.getElementById('r_b500').innerText = b500.toLocaleString();
             document.getElementById('r_b100').innerText = b100.toLocaleString();
             document.getElementById('r_b50').innerText = b50.toLocaleString();
             document.getElementById('r_b20').innerText = b20.toLocaleString();
-            document.getElementById('totalBanks').innerText = (b1000+b500+b100+b50+b20).toLocaleString();
+            document.getElementById('totalBanks').innerText = totalBanks.toLocaleString();
 
             let totalExp = 0, expLog = '';
             const names = document.querySelectorAll('.exp-name'), amts = document.querySelectorAll('.exp-amt');
             amts.forEach((amt, i) => {
                 let val = parseFloat(amt.value || 0);
-                if(val > 0) {
-                    totalExp += val;
-                    expLog += `หัก ${names[i].value || 'ค่าใช้จ่าย'}: <span class="minus">-${val.toLocaleString()}</span><br>`;
-                }
+                if(val > 0) { totalExp += val; expLog += `หัก ${names[i].value || 'ค่าใช้จ่าย'}: <span class="minus">-${val.toLocaleString()}</span><br>`; }
             });
             document.getElementById('totalExpenses').innerText = totalExp.toLocaleString();
 
             let cash = getVal('cashSales'), trans = getVal('transfer'), yest = getVal('yesterdayCoins');
-            let step1 = cash - totalExp - trans;
-            let final = step1 + yest - totalCoins;
+            let step1 = cash - totalExp - trans; let final = step1 + yest - totalCoins;
 
-            let detailHtml = `<b>ยอดเงินสดรับ: ${cash.toLocaleString()}</b><br>`;
-            detailHtml += expLog;
+            let detailHtml = `<b>ยอดเงินสดรับ: ${cash.toLocaleString()}</b><br>${expLog}`;
             if(trans > 0) detailHtml += `หัก เงินโอน: <span class="minus">-${trans.toLocaleString()}</span><br>`;
-            detailHtml += `<hr>คงเหลือเงินสด: <b>${step1.toLocaleString()}</b><br>`;
-            detailHtml += `บวก เหรียญเมื่อวาน: <span class="plus">+${yest.toLocaleString()}</span><br>`;
-            detailHtml += `หัก เหรียญวันนี้ (A): <span class="minus">-${totalCoins.toLocaleString()}</span>`;
-            
+            detailHtml += `<hr>คงเหลือเงินสด: <b>${step1.toLocaleString()}</b><br>บวก เหรียญเมื่อวาน: <span class="plus">+${yest.toLocaleString()}</span><br>หัก เหรียญวันนี้ (A): <span class="minus">-${totalCoins.toLocaleString()}</span>`;
             document.getElementById('calcDetail').innerHTML = detailHtml;
             document.getElementById('finalResult').innerText = final.toLocaleString();
         }
