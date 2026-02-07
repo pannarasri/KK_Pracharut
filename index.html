@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>โปรแกรมสรุปยอดขาย (V.6 แก้ไขการพิมพ์)</title>
+    <title>โปรแกรมสรุปยอดขาย (V.7 แก้ไขใบย่อ)</title>
     <style>
         body { font-family: 'Sarabun', sans-serif; background-color: #f0f2f5; padding: 15px; max-width: 650px; margin: auto; color: #333; }
         .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 10px; border: 1px solid #ddd; }
@@ -22,14 +22,16 @@
         .btn-full { background-color: #6c757d; }
         .btn-short { background-color: #28a745; }
 
-        /* การตั้งค่าสำหรับการปริ้นต์ */
+        /* ส่วนสำคัญ: การตั้งค่าการพิมพ์ */
         @media print {
             .no-print, .btn-group { display: none !important; }
-            body { background: white; padding: 0; }
-            .card { border: 1px solid #000; box-shadow: none; margin-bottom: 10px; padding: 10px; }
-            h3 { color: black; border-bottom: 1px solid #000; }
-            /* ถ้าเป็นการปริ้นแบบย่อ (จะถูกบังคับผ่าน JavaScript) */
-            body.print-short-mode #expenseSection { display: none !important; }
+            body { background: white; padding: 0; width: 100%; }
+            .card { border: 1px solid #000; box-shadow: none; margin-bottom: 10px; }
+            
+            /* คำสั่งซ่อนรายการเมื่ออยู่ในโหมดพิมพ์ใบย่อ */
+            body.print-short-active #expenseSection { 
+                display: none !important; 
+            }
         }
     </style>
 </head>
@@ -106,10 +108,14 @@
             calc();
         }
 
+        // ฟังก์ชันสั่งพิมพ์แบบย่อที่แก้ไขใหม่
         function printShort() {
-            document.body.classList.add('print-short-mode');
+            document.body.classList.add('print-short-active');
             window.print();
-            document.body.classList.remove('print-short-mode');
+            // หน่วงเวลานิดหนึ่งก่อนเอา class ออก เพื่อให้ iPad ประมวลผลการพิมพ์เสร็จก่อน
+            setTimeout(() => {
+                document.body.classList.remove('print-short-active');
+            }, 500);
         }
 
         function calc() {
