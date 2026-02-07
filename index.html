@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>โปรแกรมสรุปยอดขาย (V.9 แสดงตัวคูณในใบย่อ)</title>
+    <title>โปรแกรมสรุปยอดขาย (V.10 สมบูรณ์ที่สุด)</title>
     <style>
         body { font-family: 'Sarabun', sans-serif; background-color: #f0f2f5; padding: 15px; max-width: 650px; margin: auto; color: #333; }
         .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 10px; border: 1px solid #ddd; }
@@ -43,7 +43,7 @@
             <div class="row"><label>เหรียญ 2 x</label><input type="number" id="c2" oninput="calc()"><span class="res-val" id="r_c2">0</span></div>
             <div class="row"><label>เหรียญ 1 x</label><input type="number" id="c1" oninput="calc()"><span class="res-val" id="r_c1">0</span></div>
             <div class="row"><label>เหรียญมัด x</label><input type="number" id="cPack" oninput="calc()"><span class="res-val" id="r_cPack">0</span></div>
-            <div class="total-box">รวมเหรียญ (A): <span id="totalCoins">0</span> บาท</div>
+            <div class="total-box">รวมเหรียญวันนี้ (A): <span id="totalCoins">0</span> บาท</div>
         </div>
 
         <div class="card" id="bankSection">
@@ -94,39 +94,36 @@
         function printShort() {
             const dateVal = document.getElementById('dateInput').value;
             const style = document.head.innerHTML;
-            
-            // ฟังก์ชันดึงค่าไปโชว์ในใบย่อแบบมีตัวคูณ
-            const getShortRows = (ids, multiplier) => {
-                let html = '';
-                ids.forEach(id => {
-                    let qty = document.getElementById(id).value || 0;
-                    let total = qty * multiplier[id];
-                    if(qty > 0) html += `<div style="display:flex;justify-content:space-between;margin-bottom:5px;"><span>${document.querySelector('label[for="'+id+'"]')?.innerText || id} x ${qty}</span><span>${total.toLocaleString()}</span></div>`;
+
+            const cData = [
+                {id: 'c10', name: 'เหรียญ 10', m: 10}, {id: 'c5', name: 'เหรียญ 5', m: 5},
+                {id: 'c2', name: 'เหรียญ 2', m: 2}, {id: 'c1', name: 'เหรียญ 1', m: 1},
+                {id: 'cPack', name: 'เหรียญมัด', m: 10}
+            ];
+            const bData = [
+                {id: 'b1000', name: 'แบงค์ 1000', m: 1000}, {id: 'b500', name: 'แบงค์ 500', m: 500},
+                {id: 'b100', name: 'แบงค์ 100', m: 100}, {id: 'b50', name: 'แบงค์ 50', m: 50},
+                {id: 'b20', name: 'แบงค์ 20', m: 20}
+            ];
+
+            function makeRows(data) {
+                let html = "";
+                data.forEach(item => {
+                    let q = document.getElementById(item.id).value || 0;
+                    if(q > 0) html += `<div style="display:flex;justify-content:space-between;margin-bottom:5px;"><span>${item.name} x ${q}</span><span>${(q*item.m).toLocaleString()}</span></div>`;
                 });
                 return html;
-            };
-
-            // สร้างเนื้อหาใบย่อใหม่
-            let coinLines = "", bankLines = "";
-            let cIDs = ['c10','c5','c2','c1','cPack'], cM = {c10:10,c5:5,c2:2,c1:1,cPack:10};
-            let bIDs = ['b1000','b500','b100','b50','b20'], bM = {b1000:1000,b500:500,b100:100,b50:50,b20:20};
-            
-            const createShortSection = (title, ids, mults, totalID) => {
-                let rows = "";
-                ids.forEach(id => {
-                    let q = document.getElementById(id).value || 0;
-                    if(q > 0) rows += `<div class="row"><span>${id.replace('c','เหรียญ ').replace('b','แบงค์ ').replace('Pack','มัด')} x ${q}</span><span>${(q*mults[id]).toLocaleString()}</span></div>`;
-                });
-                return `<div class="card"><h3>${title}</h3>${rows}<div class="total-box">รวม: ${document.getElementById(totalID).innerText}</div></div>`;
-            };
+            }
 
             const printWin = window.open('', '_blank');
-            printWin.document.write(`<html><head>${style}<style>.card{border:1px solid #000;box-shadow:none;margin-bottom:10px;}.row{display:flex;justify-content:space-between;}</style></head><body>`);
+            printWin.document.write(`<html><head>${style}<style>.card{border:1px solid #000;box-shadow:none;margin-bottom:10px;padding:10px;}.row{display:flex;justify-content:space-between;}</style></head><body>`);
             printWin.document.write(`<h2 style="text-align:center;">📝 สรุปยอดขาย (ใบย่อ)</h2><p style="text-align:center;">วันที่: ${dateVal}</p>`);
-            printWin.document.write(createShortSection("💰 1. รายละเอียดเหรียญ", cIDs, cM, "totalCoins"));
-            printWin.document.write(createShortSection("💵 2. รายละเอียดแบงค์", bIDs, bM, "totalBanks"));
-            printWin.document.write(`<div class="card summary-section"><h3>📊 4. สรุปยอดสุทธิ</h3>${document.getElementById('calcDetail').innerHTML}<div class="final-box">${document.getElementById('finalResult').parentElement.innerHTML}</div></div>`);
-            printWin.document.write(`<script>setTimeout(() => { window.print(); window.close(); }, 500);<\/script></body></html>`);
+            
+            printWin.document.write(`<div class="card"><h3>💰 1. รายละเอียดเหรียญ</h3>${makeRows(cData)}<div class="total-box">รวม: ${document.getElementById('totalCoins').innerText}</div></div>`);
+            printWin.document.write(`<div class="card"><h3>💵 2. รายละเอียดแบงค์</h3>${makeRows(bData)}<div class="total-box">รวม: ${document.getElementById('totalBanks').innerText}</div></div>`);
+            printWin.document.write(`<div class="card summary-section"><h3>📊 4. สรุปยอดสุทธิ</h3>${document.getElementById('calcDetail').innerHTML}<div class="final-box">ยอดสุทธิวันนี้: ${document.getElementById('finalResult').innerText}</div></div>`);
+            
+            printWin.document.write(`<script>setTimeout(() => { window.print(); window.close(); }, 600);<\/script></body></html>`);
             printWin.document.close();
         }
 
