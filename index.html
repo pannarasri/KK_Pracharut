@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>โปรแกรมสรุปยอดขาย (V.10 สมบูรณ์ที่สุด)</title>
+    <title>โปรแกรมสรุปยอดขาย (V.12 ใบย่อแสดงครบเว้นข้อ 3)</title>
     <style>
         body { font-family: 'Sarabun', sans-serif; background-color: #f0f2f5; padding: 15px; max-width: 650px; margin: auto; color: #333; }
         .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 10px; border: 1px solid #ddd; }
@@ -12,6 +12,9 @@
         input[type="number"], input[type="text"], input[type="date"], select { padding: 8px; border: 1px solid #ccc; border-radius: 6px; width: 45%; font-size: 16px; }
         .res-val { width: 20%; text-align: right; font-weight: bold; color: #555; }
         .total-box { background-color: #e8f0fe; padding: 8px; text-align: right; font-weight: bold; color: #1967d2; border-radius: 6px; margin-top: 5px; }
+        
+        .bg-orange { background-color: #fff3e0; color: #e65100; }
+        
         .summary-section { background-color: #fffde7; border: 2px solid #fdd835; }
         .calc-detail { font-size: 0.95em; line-height: 1.8; margin-top: 10px; padding: 15px; background: #fff; border-radius: 8px; border: 1px dashed #ccc; }
         .final-box { background-color: #e8f5e9; color: #2e7d32; padding: 10px; border-radius: 6px; text-align: center; font-size: 1.5em; font-weight: bold; margin-top: 10px; border: 2px solid #a5d6a7; }
@@ -37,7 +40,7 @@
 
     <div id="mainForm">
         <div class="card" id="coinSection">
-            <h3>💰 1. รายละเอียดเหรียญ</h3>
+            <h3>💰 1. รายละเอียดเหรียญ (วันนี้)</h3>
             <div class="row"><label>เหรียญ 10 x</label><input type="number" id="c10" oninput="calc()"><span class="res-val" id="r_c10">0</span></div>
             <div class="row"><label>เหรียญ 5 x</label><input type="number" id="c5" oninput="calc()"><span class="res-val" id="r_c5">0</span></div>
             <div class="row"><label>เหรียญ 2 x</label><input type="number" id="c2" oninput="calc()"><span class="res-val" id="r_c2">0</span></div>
@@ -68,18 +71,28 @@
             <div class="row"><label>📲 ยอดเงินโอน:</label><input type="number" id="transfer" oninput="calc()"></div>
         </div>
 
+        <div class="card" id="yestCoinSection">
+            <h3>🕰️ 4. เงินทอนยกมา (เมื่อวาน)</h3>
+            <div class="row"><label>เหรียญ 10 x</label><input type="number" id="yc10" oninput="calc()"><span class="res-val" id="r_yc10">0</span></div>
+            <div class="row"><label>เหรียญ 5 x</label><input type="number" id="yc5" oninput="calc()"><span class="res-val" id="r_yc5">0</span></div>
+            <div class="row"><label>เหรียญ 2 x</label><input type="number" id="yc2" oninput="calc()"><span class="res-val" id="r_yc2">0</span></div>
+            <div class="row"><label>เหรียญ 1 x</label><input type="number" id="yc1" oninput="calc()"><span class="res-val" id="r_yc1">0</span></div>
+            <div class="row"><label>เหรียญมัด x</label><input type="number" id="ycPack" oninput="calc()"><span class="res-val" id="r_ycPack">0</span></div>
+            <div class="total-box bg-orange">รวมเงินทอนเก่า: <span id="totalYestCoins">0</span> บาท</div>
+        </div>
+
         <div class="card summary-section" id="summarySection">
-            <h3>📊 4. สรุปยอดสุทธิ</h3>
+            <h3>📊 5. สรุปยอดสุทธิ</h3>
             <div class="row no-print"><label>ยอดขายเงินสด:</label><input type="number" id="cashSales" oninput="calc()"></div>
-            <div class="row no-print"><label>เหรียญเมื่อวาน:</label><input type="number" id="yesterdayCoins" oninput="calc()"></div>
+            
             <div class="calc-detail" id="calcDetail">กรอกข้อมูลเพื่อดูการแจกแจง...</div>
             <div class="final-box">ยอดสุทธิวันนี้: <span id="finalResult">0</span></div>
         </div>
     </div>
 
     <div class="btn-group no-print">
-        <button class="btn-full" onclick="window.print()">🖨️ พิมพ์ทั้งหมด (1-4)</button>
-        <button class="btn-short" onclick="printShort()">📄 พิมพ์ใบย่อ (1,2,4)</button>
+        <button class="btn-full" onclick="window.print()">🖨️ พิมพ์ทั้งหมด (1-5)</button>
+        <button class="btn-short" onclick="printShort()">📄 พิมพ์ใบย่อ (เว้นข้อ 3)</button>
     </div>
 
     <script>
@@ -95,6 +108,7 @@
             const dateVal = document.getElementById('dateInput').value;
             const style = document.head.innerHTML;
 
+            // ข้อมูลสำหรับลูปสร้างตาราง
             const cData = [
                 {id: 'c10', name: 'เหรียญ 10', m: 10}, {id: 'c5', name: 'เหรียญ 5', m: 5},
                 {id: 'c2', name: 'เหรียญ 2', m: 2}, {id: 'c1', name: 'เหรียญ 1', m: 1},
@@ -104,6 +118,11 @@
                 {id: 'b1000', name: 'แบงค์ 1000', m: 1000}, {id: 'b500', name: 'แบงค์ 500', m: 500},
                 {id: 'b100', name: 'แบงค์ 100', m: 100}, {id: 'b50', name: 'แบงค์ 50', m: 50},
                 {id: 'b20', name: 'แบงค์ 20', m: 20}
+            ];
+            const yData = [ // ข้อมูลเงินเมื่อวาน
+                {id: 'yc10', name: 'เหรียญ 10', m: 10}, {id: 'yc5', name: 'เหรียญ 5', m: 5},
+                {id: 'yc2', name: 'เหรียญ 2', m: 2}, {id: 'yc1', name: 'เหรียญ 1', m: 1},
+                {id: 'ycPack', name: 'เหรียญมัด', m: 10}
             ];
 
             function makeRows(data) {
@@ -119,9 +138,17 @@
             printWin.document.write(`<html><head>${style}<style>.card{border:1px solid #000;box-shadow:none;margin-bottom:10px;padding:10px;}.row{display:flex;justify-content:space-between;}</style></head><body>`);
             printWin.document.write(`<h2 style="text-align:center;">📝 สรุปยอดขาย (ใบย่อ)</h2><p style="text-align:center;">วันที่: ${dateVal}</p>`);
             
+            // หัวข้อ 1: เหรียญวันนี้
             printWin.document.write(`<div class="card"><h3>💰 1. รายละเอียดเหรียญ</h3>${makeRows(cData)}<div class="total-box">รวม: ${document.getElementById('totalCoins').innerText}</div></div>`);
+            
+            // หัวข้อ 2: แบงค์
             printWin.document.write(`<div class="card"><h3>💵 2. รายละเอียดแบงค์</h3>${makeRows(bData)}<div class="total-box">รวม: ${document.getElementById('totalBanks').innerText}</div></div>`);
-            printWin.document.write(`<div class="card summary-section"><h3>📊 4. สรุปยอดสุทธิ</h3>${document.getElementById('calcDetail').innerHTML}<div class="final-box">ยอดสุทธิวันนี้: ${document.getElementById('finalResult').innerText}</div></div>`);
+            
+            // หัวข้อ 4: เงินเมื่อวาน (เพิ่มเข้ามาให้แล้ว)
+            printWin.document.write(`<div class="card"><h3>🕰️ 4. เงินทอนยกมา (เมื่อวาน)</h3>${makeRows(yData)}<div class="total-box bg-orange">รวม: ${document.getElementById('totalYestCoins').innerText}</div></div>`);
+
+            // หัวข้อ 5: สรุป
+            printWin.document.write(`<div class="card summary-section"><h3>📊 5. สรุปยอดสุทธิ</h3>${document.getElementById('calcDetail').innerHTML}<div class="final-box">ยอดสุทธิวันนี้: ${document.getElementById('finalResult').innerText}</div></div>`);
             
             printWin.document.write(`<script>setTimeout(() => { window.print(); window.close(); }, 600);<\/script></body></html>`);
             printWin.document.close();
@@ -129,6 +156,8 @@
 
         function calc() {
             let getVal = (id) => parseFloat(document.getElementById(id).value || 0);
+            
+            // 1. เหรียญวันนี้
             let v10=getVal('c10')*10, v5=getVal('c5')*5, v2=getVal('c2')*2, v1=getVal('c1')*1, vp=getVal('cPack')*10;
             let totalCoins = v10+v5+v2+v1+vp;
             document.getElementById('r_c10').innerText = v10.toLocaleString();
@@ -138,6 +167,7 @@
             document.getElementById('r_cPack').innerText = vp.toLocaleString();
             document.getElementById('totalCoins').innerText = totalCoins.toLocaleString();
 
+            // 2. แบงค์
             let b1000=getVal('b1000')*1000, b500=getVal('b500')*500, b100=getVal('b100')*100, b50=getVal('b50')*50, b20=getVal('b20')*20;
             let totalBanks = b1000+b500+b100+b50+b20;
             document.getElementById('r_b1000').innerText = b1000.toLocaleString();
@@ -147,6 +177,7 @@
             document.getElementById('r_b20').innerText = b20.toLocaleString();
             document.getElementById('totalBanks').innerText = totalBanks.toLocaleString();
 
+            // 3. จ่าย
             let totalExp = 0, expLog = '';
             const names = document.querySelectorAll('.exp-name'), amts = document.querySelectorAll('.exp-amt');
             amts.forEach((amt, i) => {
@@ -155,12 +186,25 @@
             });
             document.getElementById('totalExpenses').innerText = totalExp.toLocaleString();
 
-            let cash = getVal('cashSales'), trans = getVal('transfer'), yest = getVal('yesterdayCoins');
-            let step1 = cash - totalExp - trans; let final = step1 + yest - totalCoins;
+            // 4. เงินทอนเมื่อวาน
+            let y10=getVal('yc10')*10, y5=getVal('yc5')*5, y2=getVal('yc2')*2, y1=getVal('yc1')*1, yp=getVal('ycPack')*10;
+            let totalYest = y10+y5+y2+y1+yp;
+            document.getElementById('r_yc10').innerText = y10.toLocaleString();
+            document.getElementById('r_yc5').innerText = y5.toLocaleString();
+            document.getElementById('r_yc2').innerText = y2.toLocaleString();
+            document.getElementById('r_yc1').innerText = y1.toLocaleString();
+            document.getElementById('r_ycPack').innerText = yp.toLocaleString();
+            document.getElementById('totalYestCoins').innerText = totalYest.toLocaleString();
+
+            // 5. สรุป
+            let cash = getVal('cashSales'), trans = getVal('transfer');
+            let step1 = cash - totalExp - trans; 
+            let final = step1 + totalYest - totalCoins;
 
             let detailHtml = `<b>ยอดเงินสดรับ: ${cash.toLocaleString()}</b><br>${expLog}`;
             if(trans > 0) detailHtml += `หัก เงินโอน: <span class="minus">-${trans.toLocaleString()}</span><br>`;
-            detailHtml += `<hr>คงเหลือเงินสด: <b>${step1.toLocaleString()}</b><br>บวก เหรียญเมื่อวาน: <span class="plus">+${yest.toLocaleString()}</span><br>หัก เหรียญวันนี้ (A): <span class="minus">-${totalCoins.toLocaleString()}</span>`;
+            detailHtml += `<hr>คงเหลือเงินสด: <b>${step1.toLocaleString()}</b><br>บวก เหรียญเก่า (รวม): <span class="plus">+${totalYest.toLocaleString()}</span><br>หัก เหรียญวันนี้ (A): <span class="minus">-${totalCoins.toLocaleString()}</span>`;
+            
             document.getElementById('calcDetail').innerHTML = detailHtml;
             document.getElementById('finalResult').innerText = final.toLocaleString();
         }
